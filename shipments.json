@@ -1,0 +1,15 @@
+{
+  "BKG0001": {
+    "location": [16.3067, 80.4365],
+    "path": [
+      [16.2944, 80.4545],
+      [16.3067, 80.4365],
+      [16.3180, 80.4200]
+    ],
+    "statusTimeline": [
+      { "status": "Dispatched", "date": "2025-06-17", "location": "Vijayawada" },
+      { "status": "In Transit", "date": "2025-06-18", "location": "Guntur" },
+      { "status": "Out for Delivery", "date": "2025-06-19", "location": "Narasaraopet" }
+    ]
+  }
+}
