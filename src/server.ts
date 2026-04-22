@@ -10,6 +10,7 @@ import trackingRoutes from './routes/tracking.routes';
 import userRoutes from './routes/user.routes';
 import quotesRoutes from './routes/quotes.routes';
 import paymentRoutes from './routes/payment.routes';
+import logger from './config/logger';
 
 dotenv.config();
 
@@ -48,7 +49,7 @@ app.use((req, res) => {
 });
 
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  console.error(err.stack);
+  logger.error(err.stack);
   res.status(500).json({ 
     success: false, 
     message: 'Internal server error' 
@@ -56,7 +57,8 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
 });
 
 app.listen(PORT, () => {
-  console.log(`🚀 Shippitin API running on port ${PORT}`);
+  logger.info(`🚀 Shippitin API running on port ${PORT}`);
+  logger.info(`Environment: ${process.env.NODE_ENV || 'development'}`);
 });
 
 export default app;
