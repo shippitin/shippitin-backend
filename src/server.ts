@@ -8,6 +8,7 @@ import authRoutes from './routes/auth.routes';
 import bookingRoutes from './routes/booking.routes';
 import trackingRoutes from './routes/tracking.routes';
 import userRoutes from './routes/user.routes';
+import quotesRoutes from './routes/quotes.routes';
 
 dotenv.config();
 
@@ -35,6 +36,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/tracking', trackingRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/quotes', quotesRoutes);
 
 app.use((req, res) => {
   res.status(404).json({ 

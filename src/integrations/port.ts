@@ -166,7 +166,7 @@ export const getPortStatus = async (portCallNumber: string): Promise<PortStatusR
   };
 };
 
-export const getPorts = async (): Promise<{ code: string; name: string; city: string; state: string }[]> => {
+export const getMajorPorts = async (): Promise<{ code: string; name: string; city: string; state: string }[]> => {
   // TODO: Replace with real API call
   return [
     { code: 'INJNP', name: 'Jawaharlal Nehru Port (JNPT)', city: 'Mumbai', state: 'Maharashtra' },
