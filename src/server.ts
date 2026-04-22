@@ -9,6 +9,7 @@ import bookingRoutes from './routes/booking.routes';
 import trackingRoutes from './routes/tracking.routes';
 import userRoutes from './routes/user.routes';
 import quotesRoutes from './routes/quotes.routes';
+import paymentRoutes from './routes/payment.routes';
 
 dotenv.config();
 
@@ -37,6 +38,7 @@ app.use('/api/bookings', bookingRoutes);
 app.use('/api/tracking', trackingRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/quotes', quotesRoutes);
+app.use('/api/payments', paymentRoutes);
 
 app.use((req, res) => {
   res.status(404).json({ 
@@ -57,4 +59,4 @@ app.listen(PORT, () => {
   console.log(`🚀 Shippitin API running on port ${PORT}`);
 });
 
-export default app; 
+export default app;
