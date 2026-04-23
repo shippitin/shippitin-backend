@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import {
-  createBooking,
+  createBookingHandler,
   getMyBookings,
   getBookingById,
   cancelBooking,
@@ -12,7 +12,7 @@ const router = Router();
 
 router.use(protect);
 
-router.post('/', bookingValidator, validate, createBooking);
+router.post('/', bookingValidator, validate, createBookingHandler);
 router.get('/', getMyBookings);
 router.get('/:id', getBookingById);
 router.put('/:id/cancel', cancelBooking);

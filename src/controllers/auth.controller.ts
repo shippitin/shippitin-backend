@@ -3,8 +3,8 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
 import { query } from '../config/database';
-import { sendWelcomeEmail } from '../integrations/email';
-import { sendWelcomeSMS } from '../integrations/sms';
+import { getUserByEmail } from '../services/user.service';
+import { emitUserRegistered } from '../services/event.service';
 
 const generateToken = (id: string, email: string, role: string) => {
   return jwt.sign(
@@ -25,12 +25,9 @@ export const register = async (req: Request, res: Response) => {
       });
     }
 
-    const existingUser = await query(
-      'SELECT id FROM users WHERE email = $1',
-      [email]
-    );
-
-    if (existingUser.rows.length > 0) {
+    // Use user service to check existing user
+    const existingUser = await getUserByEmail(email);
+    if (existingUser) {
       return res.status(400).json({
         success: false,
         message: 'User already exists with this email',
@@ -51,11 +48,13 @@ export const register = async (req: Request, res: Response) => {
     const user = newUser.rows[0];
     const token = generateToken(user.id, user.email, user.role);
 
-    // Send welcome email
-    sendWelcomeEmail(email, full_name).catch(err => console.error('Email error:', err));
-
-    // Send welcome SMS
-    sendWelcomeSMS(phone, full_name).catch(err => console.error('SMS error:', err));
+    // Fire event — notification module handles email + SMS automatically
+    emitUserRegistered({
+      userId: user.id,
+      email: user.email,
+      fullName: user.full_name,
+      phone: user.phone,
+    });
 
     return res.status(201).json({
       success: true,
@@ -82,21 +81,15 @@ export const login = async (req: Request, res: Response) => {
       });
     }
 
-    const result = await query(
-      'SELECT * FROM users WHERE email = $1',
-      [email]
-    );
-
-    if (result.rows.length === 0) {
+    const user = await getUserByEmail(email);
+    if (!user) {
       return res.status(401).json({
         success: false,
         message: 'Invalid email or password',
       });
     }
 
-    const user = result.rows[0];
     const isMatch = await bcrypt.compare(password, user.password);
-
     if (!isMatch) {
       return res.status(401).json({
         success: false,
