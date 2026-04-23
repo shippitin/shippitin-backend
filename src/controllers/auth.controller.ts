@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
 import { query } from '../config/database';
 import { sendWelcomeEmail } from '../integrations/email';
+import { sendWelcomeSMS } from '../integrations/sms';
 
 const generateToken = (id: string, email: string, role: string) => {
   return jwt.sign(
@@ -52,6 +53,9 @@ export const register = async (req: Request, res: Response) => {
 
     // Send welcome email
     sendWelcomeEmail(email, full_name).catch(err => console.error('Email error:', err));
+
+    // Send welcome SMS
+    sendWelcomeSMS(phone, full_name).catch(err => console.error('SMS error:', err));
 
     return res.status(201).json({
       success: true,
