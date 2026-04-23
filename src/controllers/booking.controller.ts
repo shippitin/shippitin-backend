@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import { query } from '../config/database';
 import { AuthRequest } from '../middleware/auth.middleware';
+import { sendBookingConfirmationEmail } from '../integrations/email';
 
 export const createBooking = async (req: AuthRequest, res: Response) => {
   try {
@@ -52,10 +53,37 @@ export const createBooking = async (req: AuthRequest, res: Response) => {
       ]
     );
 
+    const booking = newBooking.rows[0];
+
+    // Send booking confirmation email
+    try {
+      const userResult = await query(
+        'SELECT full_name, email FROM users WHERE id = $1',
+        [req.user?.id]
+      );
+      if (userResult.rows.length > 0) {
+        const user = userResult.rows[0];
+        sendBookingConfirmationEmail(
+          user.email,
+          user.full_name,
+          {
+            bookingNumber,
+            serviceType: service_type,
+            origin,
+            destination,
+            bookingDate: booking_date,
+            estimatedPrice: estimated_price || 0,
+          }
+        ).catch(err => console.error('Email error:', err));
+      }
+    } catch (emailError) {
+      console.error('Email send error:', emailError);
+    }
+
     return res.status(201).json({
       success: true,
       message: 'Booking created successfully',
-      data: newBooking.rows[0],
+      data: booking,
     });
   } catch (error) {
     console.error('Create booking error:', error);

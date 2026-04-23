@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
 import { query } from '../config/database';
+import { sendWelcomeEmail } from '../integrations/email';
 
 const generateToken = (id: string, email: string, role: string) => {
   return jwt.sign(
@@ -48,6 +49,9 @@ export const register = async (req: Request, res: Response) => {
 
     const user = newUser.rows[0];
     const token = generateToken(user.id, user.email, user.role);
+
+    // Send welcome email
+    sendWelcomeEmail(email, full_name).catch(err => console.error('Email error:', err));
 
     return res.status(201).json({
       success: true,
