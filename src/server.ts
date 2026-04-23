@@ -12,7 +12,7 @@ import userRoutes from './routes/user.routes';
 import quotesRoutes from './routes/quotes.routes';
 import paymentRoutes from './routes/payment.routes';
 import logger from './config/logger';
-
+import adminRoutes from './routes/admin.routes';
 dotenv.config();
 
 const app = express();
@@ -62,6 +62,7 @@ app.use('/api/tracking', trackingRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/quotes', quotesRoutes);
 app.use('/api/payments', paymentRoutes);
+app.use('/api/admin', adminRoutes);
 
 app.use((req, res) => {
   res.status(404).json({ 
