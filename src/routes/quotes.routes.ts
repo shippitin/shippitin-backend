@@ -1,5 +1,7 @@
+// src/routes/quotes.routes.ts
 import { Router } from 'express';
-import { protect } from '../middleware/auth.middleware';
+import { protect, adminOnly } from '../middleware/auth.middleware';
+import { getQuotesHandler, getRateCardsHandler, createRateCardHandler, updateRateCardHandler, deleteRateCardHandler } from '../controllers/quotes.controller';
 import {
   getRailQuotes,
   createRailBooking,
@@ -56,13 +58,20 @@ import { v4 as uuidv4 } from 'uuid';
 const router = Router();
 
 // ============================================
+// RATE CARDS — Shippitin managed rates from DB
+// ============================================
+router.get('/rate-cards/search', protect, getQuotesHandler);
+router.get('/rate-cards', protect, adminOnly, getRateCardsHandler);
+router.post('/rate-cards', protect, adminOnly, createRateCardHandler);
+router.put('/rate-cards/:id', protect, adminOnly, updateRateCardHandler);
+router.delete('/rate-cards/:id', protect, adminOnly, deleteRateCardHandler);
+
+// ============================================
 // RAIL ROUTES
 // ============================================
 router.post('/rail/quotes', protect, async (req: any, res) => {
   try {
     const quotes = await getRailQuotes(req.body);
-    
-    // Save quote to database
     for (const quote of quotes) {
       await query(
         `INSERT INTO quotes (id, user_id, service_type, origin, destination, cargo_details, quoted_price, valid_until, status, created_at)
@@ -70,7 +79,6 @@ router.post('/rail/quotes', protect, async (req: any, res) => {
         [uuidv4(), req.user.id, req.body.origin, req.body.destination, JSON.stringify(req.body), quote.price, quote.validUntil]
       );
     }
-
     res.json({ success: true, data: quotes });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Error fetching rail quotes' });
@@ -80,13 +88,11 @@ router.post('/rail/quotes', protect, async (req: any, res) => {
 router.post('/rail/book', protect, async (req: any, res) => {
   try {
     const booking = await createRailBooking(req.body);
-    
     await query(
       `INSERT INTO bookings (id, booking_number, user_id, service_type, origin, destination, cargo_type, weight, booking_date, status, created_at)
        VALUES ($1, $2, $3, 'Rail', $4, $5, $6, $7, $8, 'confirmed', NOW())`,
       [uuidv4(), booking.bookingId, req.user.id, req.body.origin, req.body.destination, req.body.cargoType, req.body.weight, req.body.bookingDate]
     );
-
     res.json({ success: true, data: booking });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Error creating rail booking' });
@@ -126,13 +132,11 @@ router.post('/sea/quotes', protect, async (req: any, res) => {
 router.post('/sea/book', protect, async (req: any, res) => {
   try {
     const booking = await createSeaBooking(req.body);
-
     await query(
       `INSERT INTO bookings (id, booking_number, user_id, service_type, origin, destination, cargo_type, weight, booking_date, status, created_at)
        VALUES ($1, $2, $3, 'Sea', $4, $5, $6, $7, $8, 'confirmed', NOW())`,
       [uuidv4(), booking.bookingId, req.user.id, req.body.originPort, req.body.destinationPort, req.body.cargoType, req.body.weight, req.body.bookingDate]
     );
-
     res.json({ success: true, data: booking });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Error creating sea booking' });
@@ -172,13 +176,11 @@ router.post('/air/quotes', protect, async (req: any, res) => {
 router.post('/air/book', protect, async (req: any, res) => {
   try {
     const booking = await createAirBooking(req.body);
-
     await query(
       `INSERT INTO bookings (id, booking_number, user_id, service_type, origin, destination, cargo_type, weight, booking_date, status, created_at)
        VALUES ($1, $2, $3, 'Air', $4, $5, $6, $7, $8, 'confirmed', NOW())`,
       [uuidv4(), booking.bookingId, req.user.id, req.body.originAirport, req.body.destinationAirport, req.body.cargoType, req.body.weight, req.body.bookingDate]
     );
-
     res.json({ success: true, data: booking });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Error creating air booking' });
@@ -218,13 +220,11 @@ router.post('/truck/quotes', protect, async (req: any, res) => {
 router.post('/truck/book', protect, async (req: any, res) => {
   try {
     const booking = await createTruckBooking(req.body);
-
     await query(
       `INSERT INTO bookings (id, booking_number, user_id, service_type, origin, destination, cargo_type, weight, booking_date, status, created_at)
        VALUES ($1, $2, $3, 'Truck', $4, $5, $6, $7, $8, 'confirmed', NOW())`,
       [uuidv4(), booking.bookingId, req.user.id, req.body.originPincode, req.body.destinationPincode, req.body.cargoType, req.body.weight, req.body.bookingDate]
     );
-
     res.json({ success: true, data: booking });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Error creating truck booking' });
@@ -255,13 +255,11 @@ router.post('/customs/quote', protect, async (req: any, res) => {
 router.post('/customs/file', protect, async (req: any, res) => {
   try {
     const filing = await fileCustomsDeclaration(req.body);
-
     await query(
       `INSERT INTO bookings (id, booking_number, user_id, service_type, origin, destination, cargo_type, weight, booking_date, status, created_at)
        VALUES ($1, $2, $3, 'Customs', $4, $5, $6, $7, NOW(), 'filed', NOW())`,
       [uuidv4(), filing.filingId, req.user.id, req.body.countryOfOrigin, req.body.portOfEntry, req.body.cargoType, req.body.weight]
     );
-
     res.json({ success: true, data: filing });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Error filing customs declaration' });
@@ -301,13 +299,11 @@ router.post('/port/quote', protect, async (req: any, res) => {
 router.post('/port/book', protect, async (req: any, res) => {
   try {
     const booking = await createPortBooking(req.body);
-
     await query(
       `INSERT INTO bookings (id, booking_number, user_id, service_type, origin, destination, cargo_type, weight, booking_date, status, created_at)
        VALUES ($1, $2, $3, 'Port', $4, $4, $5, $6, $7, 'confirmed', NOW())`,
       [uuidv4(), booking.bookingId, req.user.id, req.body.portCode, req.body.serviceCategory, req.body.cargoWeight || 0, req.body.arrivalDate]
     );
-
     res.json({ success: true, data: booking });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Error creating port booking' });
@@ -377,13 +373,11 @@ router.post('/lcl/quotes', protect, async (req: any, res) => {
 router.post('/lcl/book', protect, async (req: any, res) => {
   try {
     const booking = await createLCLBooking(req.body);
-
     await query(
       `INSERT INTO bookings (id, booking_number, user_id, service_type, origin, destination, cargo_type, weight, booking_date, status, created_at)
        VALUES ($1, $2, $3, 'LCL', $4, $5, $6, $7, $8, 'confirmed', NOW())`,
       [uuidv4(), booking.bookingId, req.user.id, req.body.originPort, req.body.destinationPort, req.body.cargoType, req.body.weight, req.body.bookingDate]
     );
-
     res.json({ success: true, data: booking });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Error creating LCL booking' });
@@ -414,13 +408,11 @@ router.post('/parcel/quotes', protect, async (req: any, res) => {
 router.post('/parcel/book', protect, async (req: any, res) => {
   try {
     const booking = await createParcelBooking(req.body);
-
     await query(
       `INSERT INTO bookings (id, booking_number, user_id, service_type, origin, destination, cargo_type, weight, booking_date, status, created_at)
        VALUES ($1, $2, $3, 'Parcel', $4, $5, $6, $7, $8, 'confirmed', NOW())`,
       [uuidv4(), booking.bookingId, req.user.id, req.body.originPincode, req.body.destinationPincode, req.body.description, req.body.weight, req.body.bookingDate]
     );
-
     res.json({ success: true, data: booking });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Error creating parcel booking' });

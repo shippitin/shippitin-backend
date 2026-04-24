@@ -12,7 +12,7 @@ export const createBookingHandler = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ success: false, message: 'Please provide all required fields' });
     }
 
-    const bookingNumber = booking_number || `SHP${Date.now()}`;
+    const bookingNumber = booking_number || `SHP${Date.now()}${Math.floor(Math.random() * 10000)}`;
 
     const booking = await createBooking({
       userId: req.user?.id,
