@@ -427,5 +427,24 @@ router.get('/parcel/track/:awbNumber', async (req, res) => {
     res.status(500).json({ success: false, message: 'Error tracking parcel' });
   }
 });
+// Demand stats and surge rules for admin
+router.get('/demand/stats', protect, adminOnly, async (req, res) => {
+  try {
+    const { getSearchStats } = await import('../services/quotes.service');
+    const stats = await getSearchStats();
+    res.json({ success: true, data: stats });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Error fetching demand stats' });
+  }
+});
 
+router.get('/demand/rules', protect, adminOnly, async (req, res) => {
+  try {
+    const { getSurgeRules } = await import('../services/quotes.service');
+    const rules = await getSurgeRules();
+    res.json({ success: true, data: rules });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Error fetching surge rules' });
+  }
+});
 export default router;

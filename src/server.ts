@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
 import rateLimit from 'express-rate-limit';
+import { startAIPricingEngine } from './services/aiPricing.service';
 
 import authRoutes from './routes/auth.routes';
 import bookingRoutes from './routes/booking.routes';
@@ -78,7 +79,7 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
     message: 'Internal server error' 
   });
 });
-
+startAIPricingEngine();
 app.listen(PORT, () => {
   logger.info(`🚀 Shippitin API running on port ${PORT}`);
   logger.info(`Environment: ${process.env.NODE_ENV || 'development'}`);
