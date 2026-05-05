@@ -7,7 +7,10 @@
   "scripts": {
     "dev": "nodemon --exec ts-node src/server.ts",
     "build": "tsc",
-    "start": "node dist/server.js"
+    "start": "node dist/server.js",
+    "migrate:up":     "node-pg-migrate up -m src/migrations --envPath .env",
+"migrate:down":   "node-pg-migrate down -m src/migrations --envPath .env",
+"migrate:create": "node-pg-migrate create -m src/migrations"
   },
   "dependencies": {
     "@getbrevo/brevo": "^5.0.4",
@@ -22,10 +25,12 @@
     "jsonwebtoken": "^9.0.0",
     "morgan": "^1.10.0",
     "node-cron": "^4.2.1",
+    "node-pg-migrate": "^8.0.4",
     "pg": "^8.11.0",
     "razorpay": "^2.9.6",
     "uuid": "^9.0.0",
-    "winston": "^3.19.0"
+    "winston": "^3.19.0",
+    "zod": "^4.4.2"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.0",
@@ -35,6 +40,7 @@
     "@types/morgan": "^1.9.0",
     "@types/node": "^20.0.0",
     "@types/node-cron": "^3.0.11",
+    "@types/node-pg-migrate": "^2.3.1",
     "@types/pg": "^8.10.0",
     "@types/uuid": "^9.0.0",
     "nodemon": "^3.0.0",

@@ -5,7 +5,7 @@ import morgan from 'morgan';
 import dotenv from 'dotenv';
 import rateLimit from 'express-rate-limit';
 import { startAIPricingEngine } from './services/aiPricing.service';
-
+import locationsRouter from './routes/locations.routes';
 import authRoutes from './routes/auth.routes';
 import bookingRoutes from './routes/booking.routes';
 import trackingRoutes from './routes/tracking.routes';
@@ -64,6 +64,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/quotes', quotesRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/locations', locationsRouter);
 
 app.use((req, res) => {
   res.status(404).json({ 

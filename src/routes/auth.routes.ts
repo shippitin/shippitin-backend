@@ -1,17 +1,19 @@
+// src/routes/auth.routes.ts
 import { Router } from 'express';
-import { register, login, getMe } from '../controllers/auth.controller';
-import { forgotPassword, resetPassword } from '../controllers/forgotPassword.controller';
+import { register, login, getMe, refreshToken, logout } from '../controllers/auth.controller';
 import { protect } from '../middleware/auth.middleware';
-import { registerValidator, loginValidator, validate } from '../middleware/validate.middleware';
-import { sendVerificationOTP, verifyEmail } from '../controllers/emailVerification.controller';
+import { asyncHandler } from '../utils/asyncHandler';
+import { validateBody, registerSchema, loginSchema } from '../middleware/validate.zod';
+import { z } from 'zod';
+
 const router = Router();
 
-router.post('/register', registerValidator, validate, register);
-router.post('/login', loginValidator, validate, login);
-router.get('/me', protect, getMe);
-router.post('/forgot-password', forgotPassword);
-router.post('/reset-password', resetPassword);
-router.post('/send-verification-otp', sendVerificationOTP);
-router.post('/verify-email', verifyEmail);
+const refreshSchema = z.object({ refreshToken: z.string().min(1, 'Refresh token required') });
+
+router.post('/register', validateBody(registerSchema), asyncHandler(register));
+router.post('/login',    validateBody(loginSchema),    asyncHandler(login));
+router.post('/refresh',  validateBody(refreshSchema),  asyncHandler(refreshToken));
+router.post('/logout',                                  asyncHandler(logout));
+router.get('/me',        protect,                       asyncHandler(getMe));
 
 export default router;
