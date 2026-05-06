@@ -41,11 +41,13 @@ export const register = async (req: Request, res: Response) => {
     const accessToken  = generateAccessToken(user.id, user.email, user.role);
     const refreshToken = generateRefreshToken(user.id);
 
-    // Store refresh token in DB
+    const userAgent = req.headers['user-agent'] || null;
+    const ipAddress = req.ip || (req.connection as any)?.remoteAddress || null;
+
     await query(
-      `INSERT INTO refresh_tokens (id, user_id, token, expires_at, created_at)
-       VALUES ($1, $2, $3, NOW() + INTERVAL '30 days', NOW())`,
-      [uuidv4(), user.id, refreshToken]
+      `INSERT INTO refresh_tokens (id, user_id, token, expires_at, created_at, user_agent, ip_address)
+       VALUES ($1, $2, $3, NOW() + INTERVAL '30 days', NOW(), $4, $5)`,
+      [uuidv4(), user.id, refreshToken, userAgent, ipAddress]
     );
 
     emitUserRegistered({
@@ -84,11 +86,13 @@ export const login = async (req: Request, res: Response) => {
     const accessToken  = generateAccessToken(user.id, user.email, user.role);
     const refreshToken = generateRefreshToken(user.id);
 
-    // Store refresh token in DB
+    const userAgent = req.headers['user-agent'] || null;
+    const ipAddress = req.ip || (req.connection as any)?.remoteAddress || null;
+
     await query(
-      `INSERT INTO refresh_tokens (id, user_id, token, expires_at, created_at)
-       VALUES ($1, $2, $3, NOW() + INTERVAL '30 days', NOW())`,
-      [uuidv4(), user.id, refreshToken]
+      `INSERT INTO refresh_tokens (id, user_id, token, expires_at, created_at, user_agent, ip_address)
+       VALUES ($1, $2, $3, NOW() + INTERVAL '30 days', NOW(), $4, $5)`,
+      [uuidv4(), user.id, refreshToken, userAgent, ipAddress]
     );
 
     return res.status(200).json({
@@ -122,7 +126,6 @@ export const refreshToken = async (req: Request, res: Response) => {
       return res.status(401).json({ success: false, message: 'Refresh token required' });
     }
 
-    // Verify token signature
     let decoded: any;
     try {
       decoded = jwt.verify(token, JWT_REFRESH_SECRET);
@@ -130,7 +133,6 @@ export const refreshToken = async (req: Request, res: Response) => {
       return res.status(401).json({ success: false, message: 'Invalid or expired refresh token' });
     }
 
-    // Check token exists in DB and not revoked
     const result = await query(
       `SELECT rt.*, u.email, u.role FROM refresh_tokens rt
        JOIN users u ON rt.user_id = u.id
@@ -143,17 +145,18 @@ export const refreshToken = async (req: Request, res: Response) => {
     }
 
     const row = result.rows[0];
-
-    // Rotate — revoke old, issue new
     await query('UPDATE refresh_tokens SET revoked = TRUE WHERE token = $1', [token]);
 
     const newAccessToken  = generateAccessToken(row.user_id, row.email, row.role);
     const newRefreshToken = generateRefreshToken(row.user_id);
 
+    const userAgent = req.headers['user-agent'] || null;
+    const ipAddress = req.ip || (req.connection as any)?.remoteAddress || null;
+
     await query(
-      `INSERT INTO refresh_tokens (id, user_id, token, expires_at, created_at)
-       VALUES ($1, $2, $3, NOW() + INTERVAL '30 days', NOW())`,
-      [uuidv4(), row.user_id, newRefreshToken]
+      `INSERT INTO refresh_tokens (id, user_id, token, expires_at, created_at, user_agent, ip_address)
+       VALUES ($1, $2, $3, NOW() + INTERVAL '30 days', NOW(), $4, $5)`,
+      [uuidv4(), row.user_id, newRefreshToken, userAgent, ipAddress]
     );
 
     return res.status(200).json({
@@ -187,11 +190,9 @@ export const getMe = async (req: any, res: Response) => {
       'SELECT id, full_name, email, phone, company_name, role, created_at FROM users WHERE id = $1',
       [req.user.id]
     );
-
     if (result.rows.length === 0) {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
-
     return res.status(200).json({ success: true, data: result.rows[0] });
   } catch (error) {
     console.error('GetMe error:', error);
